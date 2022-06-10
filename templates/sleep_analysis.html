@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='style.css') }}"/>
+    </head>
+<body>
+    <div class="topnav">
+        <a class="active" href="#home">Home</a>
+        <a href="{{ url_for('prediction') }}">News</a>
+        <a href="#contact">Contact</a>
+        <a href="#about">About</a>
+      </div>
+<h2>Text input fields</h2>
+
+<form>
+  <label for="fname">First name:</label><br>
+  <input type="text" id="fname" name="fname" value="John"><br>
+  <label for="lname">Last name:</label><br>
+  <input type="text" id="lname" name="lname" value="Doe">
+</form>
+<div id="container"></div>
+<div id="my_dataviz"></div>
+<script src="https://d3js.org/d3.v5.min.js"  charset="utf-8"></script>
+<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+<script src=
+"https://d3js.org/d3-fetch.v1.min.js">
+        </script>
+<script>
+    var margin = {top: 20, right: 20, bottom: 70, left: 40},
+    width = 600 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+
+
+var svg = d3.select("#container").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");   
+    d3.dsv(";","{{ url_for('static',filename='sleepdata_2 copy.csv') }}").then(function(data) {
+
+// Format data
+data.forEach(function(d) {
+  d.Steps = +d.Steps;
+});
+var x = d3.scaleBand().range([0, width]).padding(0.1);
+var y = d3.scaleLinear().range([height, 0]);
+// Scale the range of the data in the domains
+x.domain(data.map(function(d) { return d['Alarm mode']; }));
+y.domain([0, d3.max(data, function(d) { return d.Steps; })]);
+
+// Append rectangles for bar chart
+svg.selectAll(".bar")
+    .data(data)
+  .enter().append("rect")
+    .attr("class", "bar")
+    .attr("x", function(d) { return x(d['Alarm mode']); })
+    .attr("width", x.bandwidth())
+    .attr("y", function(d) { return y(d.Steps); })
+    .attr("height", function(d) { return height - y(d.Steps); });
+
+// Add x axis
+svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+
+// Add y axis
+svg.append("g")
+    .call(d3.axisLeft(y));
+
+});
+margin = {top: 10, right: 30, bottom: 30, left: 60},
+        width = 460 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var mdv = d3.select("#my_dataviz")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+    d3.dsv(";","{{ url_for('static',filename='sleepdata_2 copy.csv') }}").then( function(data) {
+
+// Add X axis
+x = d3.scaleLinear()
+.domain([0, 80000])
+.range([ 0, width ]);
+mdv.append("g")
+.attr("transform", `translate(0, ${height})`)
+.call(d3.axisBottom(x));
+
+// Add Y axis
+y = d3.scaleLinear()
+.domain([0, 80000])
+.range([ height, 0]);
+mdv.append("g")
+.call(d3.axisLeft(y));
+
+// Add dots
+mdv.append("g")
+.selectAll("dot")
+.data(data)
+.join("circle")
+    .attr("cx", function (d) { return x(d['Time in bed (seconds)']); } )
+    .attr("cy", function (d) { return y(d['Time asleep (seconds)']); } )
+    .attr("r", 5)
+    .style("fill", "black")
+console.log(data);
+})
+
+
+
+</script>
+<svg></svg>
+
+</body>
+</html>
+
