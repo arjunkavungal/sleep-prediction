@@ -19,10 +19,12 @@ def prediction():
 def model():
     df = pd.read_csv('sleepdata.csv',sep=";")
     df['Sleep quality'] = df['Sleep quality'].str.rstrip('%').astype('float')
+    # Convert hours and minutes to just minutes.
     df['Hours in bed'] = df['Time in bed'].str.split(':').str[0]
     df['Minutes in bed'] = df['Time in bed'].str.split(':').str[1]
     df['Time in bed'] = df['Hours in bed'].astype(int) * 60 + df['Minutes in bed'].astype(int)
     df = df.drop(['Hours in bed','Minutes in bed'],axis = 1)
+    # Extract data from sleep notes.
     df['Sleep Notes'] = df['Sleep Notes'].fillna("None")
     df['Stressful day'] = df['Sleep Notes'].str.contains('Stressful day').astype(int)
     df['Worked out'] = df['Sleep Notes'].str.contains('Worked out').astype(int)
@@ -40,6 +42,7 @@ def model():
     known_mood = known_mood.drop(':|',axis = 1)
     clf = RandomForestClassifier(max_depth=2, random_state=0)
     clf.fit(known_mood.iloc[:,2:-1].drop("Heart rate",axis=1), known_mood['Wake up'])
+    # Get data from form
     a = 0
     b = 0
     c = 0
