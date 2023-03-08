@@ -3,7 +3,7 @@ from flask import Flask, render_template, request
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 app = Flask(__name__)
-
+import model
 
 @app.route('/')
 def hello():
@@ -17,21 +17,7 @@ def prediction():
     return render_template("sleep_prediction.html")
 @app.route('/model')
 def model():
-    df = pd.read_csv('sleepdata.csv',sep=";")
-    df['Sleep quality'] = df['Sleep quality'].str.rstrip('%').astype('float')
-    # Convert hours and minutes to just minutes.
-    df['Hours in bed'] = df['Time in bed'].str.split(':').str[0]
-    df['Minutes in bed'] = df['Time in bed'].str.split(':').str[1]
-    df['Time in bed'] = df['Hours in bed'].astype(int) * 60 + df['Minutes in bed'].astype(int)
-    df = df.drop(['Hours in bed','Minutes in bed'],axis = 1)
-    # Extract data from sleep notes.
-    df['Sleep Notes'] = df['Sleep Notes'].fillna("None")
-    df['Stressful day'] = df['Sleep Notes'].str.contains('Stressful day').astype(int)
-    df['Worked out'] = df['Sleep Notes'].str.contains('Worked out').astype(int)
-    df['Drank tea'] = df['Sleep Notes'].str.contains('Drank tea').astype(int)
-    df['Drank coffee'] = df['Sleep Notes'].str.contains('Drank coffee').astype(int)
-    df['Ate late'] = df['Sleep Notes'].str.contains('Ate late').astype(int)
-    df = df.drop('Sleep Notes',axis = 1)
+    df = model.df
     known_mood = df[pd.notna(df['Wake up'])]
     one_hot = pd.get_dummies(known_mood['Wake up'])
     known_mood = known_mood.drop('Wake up',axis = 1)
@@ -40,14 +26,11 @@ def model():
     known_mood = known_mood.drop(':)',axis = 1)
     known_mood = known_mood.drop(':(',axis = 1)
     known_mood = known_mood.drop(':|',axis = 1)
+    # Fit the model
     clf = RandomForestClassifier(max_depth=2, random_state=0)
     clf.fit(known_mood.iloc[:,2:-1].drop("Heart rate",axis=1), known_mood['Wake up'])
     # Get data from form
-    a = 0
-    b = 0
-    c = 0
-    d = 0
-    e = 0
+    a, b, c, d, e = 0, 0, 0, 0, 0
     if request.form.get('vehicle1'):
         a = 1
     if request.form.get('vehicle2'):
